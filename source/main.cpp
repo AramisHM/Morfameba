@@ -24,6 +24,15 @@
 #endif
 
 
+
+// return the mask's relative position considering as reference the origin/target pixel and its size in layers
+int local_sp(int global_p, int taget_p, int k)
+{
+	int start_edge = (taget_p - k<0 ? 0 : taget_p - k);
+	return ((global_p - start_edge) >(k * 2) ? (k * 2) : (global_p - start_edge));
+}
+
+
 /* int x = pixel x position
    int y = pixel y position
    int K = amoeba maximumlayere size
@@ -32,7 +41,7 @@ void amoeba_process_pixel(ahm_bitmap *img, ahm_bitmap *trgt_img, int x, int y, i
 {
 	const unsigned int maxWidth = img->Width;
 	const unsigned int maxHeight = img->Height;
-	ahm_bitmap *amoeba_mask = create_ahmBitmap(img->Width, img->Height);
+	ahm_bitmap *amoeba_mask = create_ahmBitmap((K*2)+1, (K*2) + 1);
 	int i, j; i = j = 0;
 
 	// media adjacente ao pixel alvo (M1)
@@ -53,9 +62,9 @@ void amoeba_process_pixel(ahm_bitmap *img, ahm_bitmap *trgt_img, int x, int y, i
 	M1 = M1/8;
 	*/
 
-	set_pixel(amoeba_mask, x, y, 255, 255, 255); // the core is always marked
+	set_pixel(amoeba_mask, K, K, 255, 255, 255); // the core is always marked
 
-	// drarw the amoeba mask
+	// draw the amoeba mask
 	for(int k = 1; k < K; ++k) // iterate amoeba layers
 	{
 		// for each line in the window
@@ -82,11 +91,11 @@ void amoeba_process_pixel(ahm_bitmap *img, ahm_bitmap *trgt_img, int x, int y, i
 						int Pdn = get_pixel(img, i, j).r_;
 						//int Pdn1 = get_pixel(img, x1, j+1).r_;
 						int Pdn1 = get_pixel(img, x, y).r_;
-						int r_val =  get_pixel(amoeba_mask, x1, j+1).r_;
+						int r_val =  get_pixel(amoeba_mask, local_sp(x1,x,K), local_sp(j + 1, y, K)).r_;
 
 						if(r_val == 255 &&
 						abs(Pdn-Pdn1)<=abs(L)) {
-							set_pixel(amoeba_mask, i, j, 255, 255, 255); // mark it
+							set_pixel(amoeba_mask, local_sp(i, x, K), local_sp(j, y, K), 255, 255, 255); // mark it
 						}
 					}
 					if(j == maxHeight|| j == y+k) // if its bottom, analyze adjacent upper pixels
@@ -102,11 +111,11 @@ void amoeba_process_pixel(ahm_bitmap *img, ahm_bitmap *trgt_img, int x, int y, i
 						int Pdn = get_pixel(img, i, j).r_;
 						//int Pdn1 = get_pixel(img, x1, j-1).r_;
 						int Pdn1 = get_pixel(img, x, y).r_;
-						int r_val =  get_pixel(amoeba_mask, x1, j-1).r_;
+						int r_val =  get_pixel(amoeba_mask, local_sp(x1, x, K), local_sp(j - 1, y, K)).r_;
 
 						if(r_val == 255 &&
 						abs(Pdn-Pdn1)<=abs(L)) {
-							set_pixel(amoeba_mask, i, j, 255, 255, 255); // mark it
+							set_pixel(amoeba_mask, local_sp(i, x, K), local_sp(j, y, K), 255, 255, 255); // mark it
 						}
 					}
 				}
@@ -121,11 +130,11 @@ void amoeba_process_pixel(ahm_bitmap *img, ahm_bitmap *trgt_img, int x, int y, i
 					int Pdn = get_pixel(img, i, j).r_;
 					//int Pdn1 = get_pixel(img, i+1, j).r_;
 					int Pdn1 = get_pixel(img, x, y).r_;
-					int r_val =  get_pixel(amoeba_mask, i+1, j).r_;
+					int r_val =  get_pixel(amoeba_mask, local_sp(i+1, x, K), local_sp(j, y, K)).r_;
 
 					if(r_val == 255 &&
 					abs(Pdn-Pdn1)<=abs(L)) {
-						set_pixel(amoeba_mask, i, j, 255, 255, 255); // mark it
+						set_pixel(amoeba_mask, local_sp(i, x, K), local_sp(j, y, K), 255, 255, 255); // mark it
 					}
 
 				}
@@ -137,50 +146,17 @@ void amoeba_process_pixel(ahm_bitmap *img, ahm_bitmap *trgt_img, int x, int y, i
 					int Pdn = get_pixel(img, i, j).r_;
 					//int Pdn1 = get_pixel(img, i-1, j).r_;
 					int Pdn1 = get_pixel(img, x, y).r_;
-					int r_val =  get_pixel(amoeba_mask, i-1, j).r_;
+					int r_val =  get_pixel(amoeba_mask, local_sp(i-1, x, K), local_sp(j, y, K)).r_;
 
 					if(r_val == 255 &&
 					abs(Pdn-Pdn1)<=abs(L)) {
-						set_pixel(amoeba_mask, i, j, 255, 255, 255); // mark it
+						set_pixel(amoeba_mask, local_sp(i, x, K), local_sp(j, y, K), 255, 255, 255); // mark it
 					}
 				}
 			} // top/bottom right/left layer sides
 		} // window lines
 	} // k layers
 
-	
-	
-	// debug amoeba view
-	ahm_bitmap *debug_img = create_ahmBitmap(amoeba_mask->Width,amoeba_mask->Height);
-	for(i = 0; i < maxWidth; ++i)
-	{
-		for(j = 0; j < maxHeight; ++j)
-		{
-			if(get_pixel(amoeba_mask, i, j).r_ == 255)
-			{
-				set_pixel(debug_img, i, j,
-					255,
-					190,
-					get_pixel(img,i,j).r_/3
-					);
-			}
-			else
-			{
-				set_pixel(debug_img, i, j,
-					get_pixel(img,i,j).r_,
-					get_pixel(img,i,j).r_,
-					get_pixel(img,i,j).r_);
-			}
-		}
-	}
-	save_bmp(debug_img, "amoeba_test.bmp"); // debbuging the amoeba image for the pixel x,y
-	//Sleep(1100);
-	destroy_ahmBitmap(debug_img);
-	
-	
-	
-	
-	
 	
 	// by now, we have our amoeba mask, a bitmap wehre with the exact same
 	// size of the original image where the white pixels represent the amoeba
@@ -193,7 +169,7 @@ void amoeba_process_pixel(ahm_bitmap *img, ahm_bitmap *trgt_img, int x, int y, i
 	{
 		for(j = 0; j < maxHeight; ++j)
 		{
-			if(get_pixel(amoeba_mask,i,j).r_ == 255)
+			if(get_pixel(amoeba_mask, local_sp(i, x, K), local_sp(j, y, K)).r_ == 255)
 			{
 				++pixel_count;
 				mean_color += (unsigned int)get_pixel(img, i, j).r_;
@@ -246,10 +222,9 @@ void main_process_image(char *file_path)
 	{
 		for(j = 0; j < ycbcr_y->Height; ++j)
 		{
-			system("cls");
-			//printf("%f%%\n", (float)((float)i/(float)ycbcr->Width)*100.0f);
-			//printf("%f%%", (float)((float)j/(float)ycbcr->Height)*100.0f);
-			amoeba_process_pixel(ycbcr_y, trgt_img, i, j, 45, 16);
+			printf("%f%%\n", (float)((float)i/(float)ycbcr->Width)*100.0f);
+			printf("%f%%", (float)((float)j/(float)ycbcr->Height)*100.0f);
+			amoeba_process_pixel(ycbcr_y, trgt_img, i, j, 4, 20);
 		}
 	}
 
