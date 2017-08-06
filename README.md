@@ -4,6 +4,6 @@ Morfameba is a college work in witch we developed a dynamic morphological image 
 
 ![alt text](https://github.com/AramisHM/Morfameba/blob/master/doc/result.png "Demonstration")
 
-[![Watch the video](https://github.com/AramisHM/Morfameba/blob/master/doc/result.png)](https://www.youtube.com/watch?v=tC2NcXpb2w0)
+[![Watch the video](http://i3.ytimg.com/vi/tC2NcXpb2w0/maxresdefault.jpg)](https://www.youtube.com/watch?v=tC2NcXpb2w0)
 
 ![alt text](https://github.com/AramisHM/Morfameba/blob/master/doc/gif_demo.gif "Demonstration")
